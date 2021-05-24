@@ -1,4 +1,4 @@
-package com.iscs.geoip.covid
+package com.iscs.geoip.api
 
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
