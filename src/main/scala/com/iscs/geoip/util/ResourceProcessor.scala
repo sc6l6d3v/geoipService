@@ -1,4 +1,4 @@
-package com.iscs.covidbystates.util
+package com.iscs.geoip.util
 
 import cats.effect.{Blocker, ConcurrentEffect, ContextShift, Resource, Sync, Timer}
 

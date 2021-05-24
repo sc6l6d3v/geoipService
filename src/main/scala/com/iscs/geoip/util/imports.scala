@@ -1,4 +1,4 @@
-package com.iscs.covidbystates.util
+package com.iscs.geoip.util
 
 import cats.implicits._
 import cats.effect.implicits._
@@ -14,7 +14,7 @@ import org.mongodb.scala.{BulkWriteResult, MongoCollection, Observable}
 import scala.reflect.ClassTag
 
 object imports {
-  final val Mongo = com.iscs.covidbystates.util.Mongo
+  final val Mongo = com.iscs.geoip.util.Mongo
 
   def toAsync[F[_]: ConcurrentEffect, T](obs: Observable[T]): F[Option[T]] =
     ConcurrentEffect[F].async[Option[T]] { (cb: Either[Throwable, Option[T]] => Unit) =>

@@ -1,8 +1,8 @@
-package com.iscs.covidbystates.domains
+package com.iscs.geoip.domains
 
 import cats.effect.{Concurrent, Sync}
 import cats.implicits._
-import com.iscs.covidbystates.covid.GeoIPApiUri
+import com.iscs.geoip.covid.GeoIPApiUri
 import com.typesafe.scalalogging.Logger
 import dev.profunktor.redis4cats.RedisCommands
 import io.circe._

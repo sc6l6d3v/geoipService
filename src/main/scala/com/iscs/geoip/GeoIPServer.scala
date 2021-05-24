@@ -1,10 +1,10 @@
-package com.iscs.covidbystates
+package com.iscs.geoip
 
 import cats.effect.{Blocker, Concurrent, ConcurrentEffect, ContextShift, Sync, Timer}
 import cats.implicits._
-import com.iscs.covidbystates.domains.GeoIP
-import com.iscs.covidbystates.routes.GeoIPRoutes
-import com.iscs.covidbystates.util.{DbClient, ResourceProcessor}
+import com.iscs.geoip.domains.GeoIP
+import com.iscs.geoip.routes.GeoIPRoutes
+import com.iscs.geoip.util.{DbClient, ResourceProcessor}
 import com.typesafe.scalalogging.Logger
 import dev.profunktor.redis4cats.RedisCommands
 import fs2.Stream

@@ -1,8 +1,8 @@
-package com.iscs.covidbystates.util
+package com.iscs.geoip.util
 
 import org.mongodb.scala.MongoClientSettings
 import cats.effect.{Resource, Sync}
-import com.iscs.covidbystates.config.MongodbConfig
+import com.iscs.geoip.config.MongodbConfig
 import org.mongodb.scala.MongoClient
 
 object Mongo {

@@ -1,4 +1,4 @@
-package com.iscs.covidbystates.covid
+package com.iscs.geoip.covid
 
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter

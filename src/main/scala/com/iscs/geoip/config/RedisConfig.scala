@@ -1,4 +1,4 @@
-package com.iscs.covidbystates.config
+package com.iscs.geoip.config
 
 import cats.effect.{IO, Resource}
 import dev.profunktor.redis4cats.connection.RedisURI

@@ -1,7 +1,7 @@
-package com.iscs.covidbystates.util
+package com.iscs.geoip.util
 
 import cats.effect.{ConcurrentEffect, Effect}
-import com.iscs.covidbystates.config.MongodbConfig
+import com.iscs.geoip.config.MongodbConfig
 import org.mongodb.scala.bson.Document
 import org.mongodb.scala.{MongoClient, MongoCollection, MongoDatabase}
 

@@ -1,4 +1,4 @@
-package com.iscs.covidbystates.config
+package com.iscs.geoip.config
 
 import com.mongodb.ReadPreference
 import org.mongodb.scala.{ConnectionString, MongoClientSettings, MongoCredential}

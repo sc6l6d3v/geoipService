@@ -1,8 +1,8 @@
-package com.iscs.covidbystates
+package com.iscs.geoip
 
 import cats.effect.{ExitCode, IO, IOApp, Resource}
-import com.iscs.covidbystates.config.RedisConfig
-import com.iscs.covidbystates.util.{DbClient, Mongo}
+import com.iscs.geoip.config.RedisConfig
+import com.iscs.geoip.util.{DbClient, Mongo}
 import com.typesafe.scalalogging.Logger
 import dev.profunktor.redis4cats.connection.RedisClient
 import dev.profunktor.redis4cats.data.RedisCodec

@@ -1,8 +1,8 @@
-package com.iscs.covidbystates.routes
+package com.iscs.geoip.routes
 
 import cats.effect.Sync
 import cats.implicits._
-import com.iscs.covidbystates.domains.GeoIP
+import com.iscs.geoip.domains.GeoIP
 import com.typesafe.scalalogging.Logger
 import io.circe.Encoder
 import io.circe.generic.semiauto._
