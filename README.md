@@ -1,4 +1,4 @@
-# Covid stats
+# Obtain GeoIP data given IP
 
 Working Scala REST backend using IP geolocation API to obtain data for IP address with redis caching.
 
