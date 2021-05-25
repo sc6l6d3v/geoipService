@@ -1,6 +1,6 @@
 # Covid stats
 
-Working Scala REST backend merging covid, demographic and electorate data.
+Working Scala REST backend using IP geolocation API to obtain data for IP address with redis caching.
 
 
 ### Docker
@@ -12,8 +12,8 @@ docker build --build-arg rediskey=$REDISKEY \
              --build-arg redishost=$REDISHOST \
              --build-arg mongourl=$MONGOURI \
              --build-arg mongoro=$MONGORO \
-             --build-arg censuskey=$CENSUSKEY \
-             -t covid:rest .
+             --build-arg censuskey=$GEOIPKEY \
+             -t geoip:rest .
 ```
 
 The aforementioned command will build the image and tag it with the latest commit hash.
@@ -21,7 +21,7 @@ The aforementioned command will build the image and tag it with the latest commi
 To run said image:
 
 ```
-docker run --env MONGOURI=$MONGOURI --env MONGORO=false -d -p 8080:8080 covid:rest
+docker run --env MONGOURI=$MONGOURI --env MONGORO=false -d -p 8080:8080 geoip:rest
 ```
 
 To attach to said image via shell:

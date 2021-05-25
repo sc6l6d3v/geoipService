@@ -1,8 +1,9 @@
 package com.iscs.geoip.domains
 
-import cats.effect.{Concurrent, Sync}
+import cats.effect.{Concurrent, ConcurrentEffect, Sync}
 import cats.implicits._
 import com.iscs.geoip.api.GeoIPApiUri
+import com.iscs.geoip.util.{DbClient, MongoCollectionEffect}
 import com.typesafe.scalalogging.Logger
 import dev.profunktor.redis4cats.RedisCommands
 import io.circe._
@@ -14,6 +15,8 @@ import org.http4s.circe._
 import org.http4s.client.Client
 import org.http4s.client.dsl.Http4sClientDsl
 import org.http4s.{EntityDecoder, EntityEncoder, _}
+import org.mongodb.scala.bson.BsonDocument
+import org.mongodb.scala.bson.collection.immutable.Document
 
 trait GeoIP[F[_]] extends Cache[F] {
   def getByIP(state: String): F[GeoIP.IP]
@@ -43,9 +46,10 @@ object GeoIP {
 
   def fromState(state: String): IP = parse(state).getOrElse(Json.Null).as[IP].getOrElse(IP.empty)
 
-  def impl[F[_]: Concurrent: Sync](C: Client[F])
+  def impl[F[_]: Concurrent: Sync: ConcurrentEffect](C: Client[F], dbClient: DbClient[F])
                                   (implicit cmd: RedisCommands[F, String, String]): GeoIP[F] = new GeoIP[F]{
     val dsl: Http4sClientDsl[F] = new Http4sClientDsl[F]{}
+    val dbfx: MongoCollectionEffect[Document] = dbClient.fxMap("ipdb")
     import dsl._
 
     def getByIP(ip: String): F[IP] =  for {
@@ -57,7 +61,14 @@ object GeoIP {
           cdata <- C.expect[IP](GET(stateUri)).adaptError { case t =>
             L.error(s"decode error {$t.getMessage}")
             DataError(t) }
-          _ <- setRedisKey(key, cdata.asJson.toString)
+          cdataJson <- Concurrent[F].delay(cdata.asJson)
+          cdataStr <- Concurrent[F].delay(cdataJson.toString)
+          _ <- setRedisKey(key, cdataStr)
+          cdataMongoJson <- Concurrent[F].delay(cdataJson.mapObject{_.remove("ip").add("_id", Json.fromString(ip))})
+          _ <- dbfx.insertOne(BsonDocument(cdataMongoJson.toString)).handleError{e =>
+            L.error(s""""exception occurred inserting {}" exception="{}"""", cdataStr, e)
+            None
+          }
         } yield cdata
       } else
         getIPFromRedis(key)

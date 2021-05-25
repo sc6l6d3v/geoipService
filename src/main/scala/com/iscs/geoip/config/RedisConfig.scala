@@ -4,7 +4,7 @@ import cats.effect.{IO, Resource}
 import dev.profunktor.redis4cats.connection.RedisURI
 
 case class RedisConfig(redisHost: String, pwd: String, database: Option[String] = None) {
-  val uri = Resource.liftF(RedisURI.make[IO](s"redis://$pwd@$redisHost"))
+  val uri = Resource.eval(RedisURI.make[IO](s"redis://$pwd@$redisHost"))
 }
 
 object RedisConfig {

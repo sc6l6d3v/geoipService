@@ -1,5 +1,7 @@
 package com.iscs.geoip
 
+import java.util.concurrent.Executors
+
 import cats.effect.{Blocker, Concurrent, ConcurrentEffect, ContextShift, Sync, Timer}
 import cats.implicits._
 import com.iscs.geoip.domains.GeoIP
@@ -13,11 +15,13 @@ import org.http4s.implicits._
 import org.http4s.server.blaze.BlazeServerBuilder
 import org.http4s.server.middleware.{Logger => hpLogger}
 
+import scala.concurrent.ExecutionContext
 import scala.concurrent.ExecutionContext.global
 
 object GeoIPServer {
   private val port = sys.env.getOrElse("PORT", "8080").toInt
   private val bindHost = sys.env.getOrElse("BINDHOST", "0.0.0.0")
+  private val threadPool = sys.env.getOrElse("THREADPOOL", "16").toInt
 
   private val L = Logger[this.type]
 
@@ -34,7 +38,7 @@ object GeoIPServer {
     val srvStream = for {
       client <- BlazeClientBuilder[F](global).stream
       mongo <- Stream.eval(mongoClient)
-      covidAlg = GeoIP.impl[F](client)
+      covidAlg = GeoIP.impl[F](client, mongo)
 
       // Combine Service Routes into an HttpApp.
       // Can also be done via a Router if you
@@ -45,7 +49,9 @@ object GeoIPServer {
       // With Middlewares in place
       finalHttpApp = hpLogger.httpApp(logHeaders = true, logBody = true)(httpApp)
 
-      exitCode <- BlazeServerBuilder[F]
+      es <- Stream.eval(Concurrent[F].delay(Executors.newFixedThreadPool(threadPool)))
+      ex <- Stream.eval(Concurrent[F].delay(ExecutionContext.fromExecutorService(es)))
+      exitCode <- BlazeServerBuilder[F](ex)
         .bindHttp(port, bindHost)
         .withHttpApp(finalHttpApp)
         .serve

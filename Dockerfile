@@ -9,20 +9,20 @@
 FROM openjdk:8
 
 # Env variables
-ENV SCALA_VERSION 2.13.1
+ENV SCALA_VERSION 2.13.6
 ENV SBT_VERSION   1.0.2
-ENV APP_NAME      covidbystates
+ENV APP_NAME      geoipService
 ENV APP_VERSION   0.1-SNAPSHOT
 
 ARG rediskey=key
 ARG redishost=host
-ARG censuskey=key
+ARG geoipkey=key
 ARG mongouri=mongodb://localhost:27017
 ARG mongoro=false
 
 ENV REDISKEY=$rediskey
 ENV REDISHOST=$redishost
-ENV CENSUSKEY=$censuskey
+ENV GEOIPKEY=$geoipkey
 ARG MONGOURI=$mongouri
 ARG MONGORO=$mongoro
 

@@ -1,4 +1,4 @@
-val Http4sVersion = "0.21.3"
+val Http4sVersion = "0.21.23"
 val CirceVersion = "0.13.0"
 val Specs2Version = "4.9.3"
 val LogbackVersion = "1.2.3"
@@ -15,7 +15,7 @@ lazy val root = (project in file("."))
     organization := "com.iscs",
     name := "geoipService",
     version := "0.1-SNAPSHOT",
-    scalaVersion := "2.13.1",
+    scalaVersion := "2.13.6",
     libraryDependencies ++= Seq(
       "org.http4s"       %% "http4s-blaze-server" % Http4sVersion,
       "org.http4s"       %% "http4s-blaze-client" % Http4sVersion,

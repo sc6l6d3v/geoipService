@@ -1,6 +1,6 @@
 package com.iscs.geoip
 
-import cats.effect.{ExitCode, IO, IOApp, Resource}
+import cats.effect.{Concurrent, ExitCode, IO, IOApp, Resource}
 import com.iscs.geoip.config.RedisConfig
 import com.iscs.geoip.util.{DbClient, Mongo}
 import com.typesafe.scalalogging.Logger
@@ -11,6 +11,7 @@ import dev.profunktor.redis4cats.{Redis, RedisCommands}
 
 object Main extends IOApp {
   private val L = Logger[this.type]
+  private val dbName = sys.env.getOrElse("DBNAME", "db")
 
   def run(args: List[String]): IO[ExitCode] = for {
     start <- IO.delay(System.currentTimeMillis)
@@ -20,8 +21,10 @@ object Main extends IOApp {
         cli <- RedisClient[IO](uri)
         cmd <- Redis[IO].fromClient(cli, RedisCodec.Utf8)
       } yield cmd
-      mongoClient <- Resource.fromAutoCloseable(DbClient[IO](Mongo.fromUrl(), List("elections-2016", "covid-state")))
-    } yield (redis, IO.delay(mongoClient))
+      mongoClient <- Resource.fromAutoCloseable(Concurrent[IO].delay(DbClient[IO](Mongo.fromUrl(), dbName, List("ipdb"))))
+    } yield {
+      (redis, IO.delay(mongoClient))
+    }
 
     ec <- resources.use { case (cmd, dbClient) =>
       implicit val redisCmd: RedisCommands[IO, String, String] = cmd
