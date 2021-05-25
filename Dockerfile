@@ -19,10 +19,18 @@ ARG redishost=host
 ARG geoipkey=key
 ARG mongouri=mongodb://localhost:27017
 ARG mongoro=false
+ARG dbname=db
+ARG port=8080
+ARG bindhost=0.0.0.0
+ARG threadpool=128
 
 ENV REDISKEY=$rediskey
 ENV REDISHOST=$redishost
 ENV GEOIPKEY=$geoipkey
+ENV DBNAME=$dbname
+ENV PORT=$port
+ENV BINDHOST=$bindhost
+ENV THREADPOOL=$threadpool
 ARG MONGOURI=$mongouri
 ARG MONGORO=$mongoro
 

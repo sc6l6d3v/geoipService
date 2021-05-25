@@ -12,7 +12,11 @@ docker build --build-arg rediskey=$REDISKEY \
              --build-arg redishost=$REDISHOST \
              --build-arg mongourl=$MONGOURI \
              --build-arg mongoro=$MONGORO \
-             --build-arg censuskey=$GEOIPKEY \
+             --build-arg geoipkey=$GEOIPKEY \
+             --build-arg dbname=$DBNAME \
+             --build-arg port=$PORT \
+             --build-arg bindhost=$BINDHOST \
+             --build-arg threadpool=$THREADPOOL \
              -t geoip:rest .
 ```
 
@@ -21,7 +25,10 @@ The aforementioned command will build the image and tag it with the latest commi
 To run said image:
 
 ```
-docker run --env MONGOURI=$MONGOURI --env MONGORO=false -d -p 8080:8080 geoip:rest
+docker run --env MONGOURI --env MONGORO --env REDISKEY --env REDISHOST \
+     	   --env GEOIPKEY --env DBNAME --env PORT --env BINDHOST \
+           --env THREADPOOL \
+           -d -p 8080:8080 geoip:rest
 ```
 
 To attach to said image via shell:

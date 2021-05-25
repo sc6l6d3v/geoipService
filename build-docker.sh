@@ -4,5 +4,9 @@ docker build --build-arg rediskey=$REDISKEY \
              --build-arg redishost=$REDISHOST \
              --build-arg mongourl=$MONGOURI \
              --build-arg mongoro=$MONGORO \
-             --build-arg censuskey=$GEOIPKEY \
+             --build-arg geoipkey=$GEOIPKEY \
+             --build-arg dbname=$DBNAME \
+             --build-arg port=$PORT \
+             --build-arg bindhost=$BINDHOST \
+             --build-arg threadpool=$THREADPOOL \
              -t geoip:rest .
