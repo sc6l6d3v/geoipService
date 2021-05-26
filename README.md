@@ -16,7 +16,8 @@ docker build --build-arg rediskey=$REDISKEY \
              --build-arg dbname=$DBNAME \
              --build-arg port=$PORT \
              --build-arg bindhost=$BINDHOST \
-             --build-arg threadpool=$THREADPOOL \
+             --build-arg clientpool=$CLIENTPOOL \
+             --build-arg serverpool=$SERVERPOOL \
              -t geoip:rest .
 ```
 
@@ -27,7 +28,7 @@ To run said image:
 ```
 docker run --env MONGOURI --env MONGORO --env REDISKEY --env REDISHOST \
      	   --env GEOIPKEY --env DBNAME --env PORT --env BINDHOST \
-           --env THREADPOOL \
+           --env CLIENTPOOL --env SERVERPOOL \
            -d -p 8080:8080 geoip:rest
 ```
 

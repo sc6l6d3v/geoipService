@@ -22,7 +22,8 @@ ARG mongoro=false
 ARG dbname=db
 ARG port=8080
 ARG bindhost=0.0.0.0
-ARG threadpool=128
+ARG clientpool=128
+ARG serverpool=128
 
 ENV REDISKEY=$rediskey
 ENV REDISHOST=$redishost
@@ -30,7 +31,8 @@ ENV GEOIPKEY=$geoipkey
 ENV DBNAME=$dbname
 ENV PORT=$port
 ENV BINDHOST=$bindhost
-ENV THREADPOOL=$threadpool
+ENV CLIENTPOOL=$clientpool
+ENV SERVERPOOL=$serverpool
 ARG MONGOURI=$mongouri
 ARG MONGORO=$mongoro
 

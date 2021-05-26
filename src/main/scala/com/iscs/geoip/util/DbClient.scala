@@ -10,15 +10,15 @@ case class DbClient[F[_]: Effect: Sync](config: MongodbConfig, dbName: String, c
 
   val db: MongoDatabase = client.getDatabase(dbName)
 
-  val collectionMap = collNames.map { name =>
-    (name -> db.getCollection(name))
+  private val collectionMap = collNames.map { name =>
+    name -> db.getCollection(name)
   }.toMap
 
   def dbFX(collection: MongoCollection[Document]) = new MongoCollectionEffect[Document](collection)
 
-  val fxMap =
+  val fxMap: Map[String, MongoCollectionEffect[Document]] =
     collNames.map { name =>
-      (name -> dbFX(collectionMap(name)))
+      name -> dbFX(collectionMap(name))
     }.toMap
 
   override def close(): Unit = client.close()

@@ -15,13 +15,13 @@ import org.http4s.implicits._
 import org.http4s.server.blaze.BlazeServerBuilder
 import org.http4s.server.middleware.{Logger => hpLogger}
 
-import scala.concurrent.ExecutionContext
-import scala.concurrent.ExecutionContext.global
+import scala.concurrent.{ExecutionContext, ExecutionContextExecutorService}
 
 object GeoIPServer {
   private val port = sys.env.getOrElse("PORT", "8080").toInt
   private val bindHost = sys.env.getOrElse("BINDHOST", "0.0.0.0")
-  private val threadPool = sys.env.getOrElse("THREADPOOL", "16").toInt
+  private val serverPoolSize = sys.env.getOrElse("SERVERPOOL", "16").toInt
+  private val clientPoolSize = sys.env.getOrElse("CLIENTPOOL", "16").toInt
 
   private val L = Logger[this.type]
 
@@ -31,12 +31,18 @@ object GeoIPServer {
     _ <- Concurrent[F].delay(L.info("\"getting resource file\" file={} contents={} lines", resName, csvLines.length))
   } yield csvLines
 
+  def getPool[F[_] : Concurrent](size: Int): Stream[F, ExecutionContextExecutorService] = for {
+    es <- Stream.eval(Concurrent[F].delay(Executors.newFixedThreadPool(size)))
+    ex <- Stream.eval(Concurrent[F].delay(ExecutionContext.fromExecutorService(es)))
+  } yield ex
+
   def stream[F[_]: ConcurrentEffect](mongoClient: F[DbClient[F]])
                                     (implicit cmd: RedisCommands[F, String, String], T: Timer[F], Con: ContextShift[F]):
   Stream[F, Nothing] = Stream.resource(Blocker[F]).flatMap { blocker =>
 
     val srvStream = for {
-      client <- BlazeClientBuilder[F](global).stream
+      clientPool <- getPool(clientPoolSize)
+      client <- BlazeClientBuilder[F](clientPool).stream
       mongo <- Stream.eval(mongoClient)
       covidAlg = GeoIP.impl[F](client, mongo)
 
@@ -49,9 +55,8 @@ object GeoIPServer {
       // With Middlewares in place
       finalHttpApp = hpLogger.httpApp(logHeaders = true, logBody = true)(httpApp)
 
-      es <- Stream.eval(Concurrent[F].delay(Executors.newFixedThreadPool(threadPool)))
-      ex <- Stream.eval(Concurrent[F].delay(ExecutionContext.fromExecutorService(es)))
-      exitCode <- BlazeServerBuilder[F](ex)
+      serverPool <- getPool(serverPoolSize)
+      exitCode <- BlazeServerBuilder[F](serverPool)
         .bindHttp(port, bindHost)
         .withHttpApp(finalHttpApp)
         .serve
