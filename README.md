@@ -29,6 +29,7 @@ To run said image:
 docker run --env MONGOURI --env MONGORO --env REDISKEY --env REDISHOST \
      	   --env GEOIPKEY --env DBNAME --env PORT --env BINDHOST \
            --env CLIENTPOOL --env SERVERPOOL \
+           --restart on-failure \
            -d -p 8080:8080 geoip:rest
 ```
 
