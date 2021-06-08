@@ -9,7 +9,7 @@ REDISKEY='f1tdfbtp00t' REDISHOST=192.168.4.46 \
     SERVERPOOL=128 \
 docker build --build-arg rediskey=$REDISKEY \
              --build-arg redishost=$REDISHOST \
-             --build-arg mongourl=$MONGOURI \
+             --build-arg mongouri=$MONGOURI \
              --build-arg mongoro=$MONGORO \
              --build-arg geoipkey=$GEOIPKEY \
              --build-arg dbname=$DBNAME \

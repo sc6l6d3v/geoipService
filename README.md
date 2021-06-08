@@ -30,6 +30,7 @@ docker run --env MONGOURI --env MONGORO --env REDISKEY --env REDISHOST \
      	   --env GEOIPKEY --env DBNAME --env PORT --env BINDHOST \
            --env CLIENTPOOL --env SERVERPOOL \
            --restart on-failure \
+           --add-host HOST1:IP1 \
            -d -p 8080:8080 geoip:rest
 ```
 

@@ -80,5 +80,5 @@ EXPOSE 5005
 COPY target/scala-2.13/${APP_NAME}-assembly-$APP_VERSION.jar $PROJECT_HOME/data/$APP_NAME.jar
 
 # This will run at start, it points to the .sh file in the bin directory to start the play app
-ENTRYPOINT java -jar $PROJECT_HOME/data/$APP_NAME.jar -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5050
+ENTRYPOINT java -jar $PROJECT_HOME/data/$APP_NAME.jar -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005
 # Add this arg to the script if you want to enable remote debugging: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005
