@@ -2,11 +2,10 @@ package com.iscs.geoip
 
 import java.util.concurrent.Executors
 
-import cats.effect.{Blocker, Concurrent, ConcurrentEffect, ContextShift, Sync, Timer}
-import cats.implicits._
+import cats.effect.{Async, Sync}
 import com.iscs.geoip.domains.GeoIP
 import com.iscs.geoip.routes.GeoIPRoutes
-import com.iscs.geoip.util.{DbClient, ResourceProcessor}
+import com.iscs.geoip.util.DbClient
 import com.typesafe.scalalogging.Logger
 import dev.profunktor.redis4cats.RedisCommands
 import fs2.Stream
@@ -14,6 +13,9 @@ import org.http4s.client.blaze.BlazeClientBuilder
 import org.http4s.implicits._
 import org.http4s.server.blaze.BlazeServerBuilder
 import org.http4s.server.middleware.{Logger => hpLogger}
+import sttp.capabilities
+import sttp.capabilities.fs2.Fs2Streams
+import sttp.client3.SttpBackend
 
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutorService}
 
@@ -25,26 +27,21 @@ object GeoIPServer {
 
   private val L = Logger[this.type]
 
-  def getResource[F[_]: Sync: ContextShift: Timer: ConcurrentEffect](resName: String, blocker: Blocker): F[String] = for {
-    resProc <- Concurrent[F].delay(new ResourceProcessor(resName))
-    csvLines <- resProc.readLinesFromFile(blocker)
-    _ <- Concurrent[F].delay(L.info("\"getting resource file\" file={} contents={} lines", resName, csvLines.length))
-  } yield csvLines
-
-  def getPool[F[_] : Concurrent](size: Int): Stream[F, ExecutionContextExecutorService] = for {
-    es <- Stream.eval(Concurrent[F].delay(Executors.newFixedThreadPool(size)))
-    ex <- Stream.eval(Concurrent[F].delay(ExecutionContext.fromExecutorService(es)))
+  def getPool[F[_] : Sync](size: Int): Stream[F, ExecutionContextExecutorService] = for {
+    es <- Stream.eval(Sync[F].delay(Executors.newFixedThreadPool(size)))
+    ex <- Stream.eval(Sync[F].delay(ExecutionContext.fromExecutorService(es)))
   } yield ex
 
-  def stream[F[_]: ConcurrentEffect](mongoClient: F[DbClient[F]])
-                                    (implicit cmd: RedisCommands[F, String, String], T: Timer[F], Con: ContextShift[F]):
-  Stream[F, Nothing] = Stream.resource(Blocker[F]).flatMap { blocker =>
+  def stream[F[_]: Async](mongoClient: F[DbClient[F]],
+                          sttpClient: SttpBackend[F, Fs2Streams[F] with capabilities.WebSockets])
+                                    (implicit cmd: RedisCommands[F, String, String]):
+  Stream[F, Nothing] = {// Stream.resource(//Blocker[F]).flatMap { blocker =>
 
     val srvStream = for {
       clientPool <- getPool(clientPoolSize)
       client <- BlazeClientBuilder[F](clientPool).stream
       mongo <- Stream.eval(mongoClient)
-      covidAlg = GeoIP.impl[F](client, mongo)
+      covidAlg = GeoIP.impl[F](client, mongo, sttpClient)
 
       // Combine Service Routes into an HttpApp.
       // Can also be done via a Router if you
@@ -62,5 +59,6 @@ object GeoIPServer {
         .serve
     } yield exitCode
     srvStream.drain
+
   }
 }

@@ -16,13 +16,14 @@ case class MongodbConfig(url: String, isReadOnly: Boolean = false) {
     .applyToConnectionPoolSettings(b => b.minSize(128).maxSize(256))
     .applyConnectionString(connection)
     .readPreference(ReadPreference.secondaryPreferred)
-    .credential(credentials)
 
-  val settings = if (useSSL)
-    baseSettings
+  val withCredentials = if (credentials == null) baseSettings else baseSettings.credential(credentials)
+
+  val settings: MongoClientSettings = if (useSSL)
+    withCredentials
       .applyToSslSettings(b => b.enabled(useSSL))
       .build()
   else
-    baseSettings
+    withCredentials
       .build()
 }
