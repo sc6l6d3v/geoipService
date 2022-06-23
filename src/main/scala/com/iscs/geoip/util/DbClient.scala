@@ -12,9 +12,9 @@ import com.typesafe.scalalogging.Logger
 import mongo4cats.bson.Document
 
 class DbClient[F[_]](//client: MongoClient[F],
-                     dbName: String,
-                     collNames: List[String],
-                     mongoCfg: MongodbConfig)(
+                     val dbName: String,
+                     val collNames: List[String],
+                     val mongoCfg: MongodbConfig)(
   implicit F: Sync[F], A: Async[F]
 ) {//dbName: String, collNames: List[String])(implicit E: Effect[F]) extends AutoCloseable {
   private val L = Logger[this.type]
@@ -25,11 +25,19 @@ class DbClient[F[_]](//client: MongoClient[F],
     .driverPlatform("Scala 2.13.6")
     .build
 
-  val dbResource: Resource[F, MongoClient[F]] = MongoClient.create[F](mongoCfg.settings, mongoDriveInfo)
+  val dbResource2: Resource[F, MongoClient[F]] = MongoClient.create[F](mongoCfg.settings, mongoDriveInfo)
 
-  def db: F[MongoDatabase[F]] = for {
-    db <- dbResource.use(client2 => client2.getDatabase(dbName))
-  } yield db
+  val dbResource = MongoClient.fromConnectionString(mongoCfg.url)
+
+  val xxxxx = dbResource.use ( client => for {
+    db <- client.getDatabase(dbName)
+    collMap <-  Sync[F].delay(collNames.foldLeft(Map.empty[String, F[MongoCollection[F, Document]]]) { case (acc, elt) =>
+      acc ++ Map(elt -> db.getCollection(elt))
+    } )
+  } yield (client, db, collMap)
+  )
+
+  val db: F[MongoDatabase[F]] = dbResource.use(_.getDatabase(dbName))
 
   def getFxMap: F[Map[String, F[MongoCollection[F, Document]]]] = for {
     mongoDb <- db
@@ -45,9 +53,3 @@ class DbClient[F[_]](//client: MongoClient[F],
   } yield coll
 }
 
-/*object DbClient {
-  def apply[F[_]](client: MongodbConfig, names: List[String]): F[DbClient[F]] =
-    E.delay(DbClient(client, names.head, names.tail))
-}*/
-
-//class DbClient[F[_]](client: MongodbConfig, names: List[String])

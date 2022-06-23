@@ -15,7 +15,7 @@ case class MongodbConfig(url: String, isReadOnly: Boolean = false) {
   val baseSettings = MongoClientSettings.builder()
     .applyToConnectionPoolSettings(b => b.minSize(128).maxSize(256))
     .applyConnectionString(connection)
-    .readPreference(ReadPreference.secondaryPreferred)
+    .readPreference(ReadPreference.primaryPreferred)
 
   val withCredentials = if (credentials == null) baseSettings else baseSettings.credential(credentials)
 
