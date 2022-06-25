@@ -8,16 +8,16 @@ case class MongodbConfig(url: String, isReadOnly: Boolean = false) {
 
   val credentials: MongoCredential = connection.getCredential
 
-  val useSSL = connection.getSslEnabled != null
+  val useSSL: Boolean = connection.getSslEnabled != null
 
-  val isReplicaSet = connection.getRequiredReplicaSetName != null
+  val isReplicaSet: Boolean = connection.getRequiredReplicaSetName != null
 
-  val baseSettings = MongoClientSettings.builder()
+  private val baseSettings = MongoClientSettings.builder()
     .applyToConnectionPoolSettings(b => b.minSize(128).maxSize(256))
     .applyConnectionString(connection)
     .readPreference(ReadPreference.primaryPreferred)
 
-  val withCredentials = if (credentials == null) baseSettings else baseSettings.credential(credentials)
+  private val withCredentials = if (credentials == null) baseSettings else baseSettings.credential(credentials)
 
   val settings: MongoClientSettings = if (useSSL)
     withCredentials

@@ -23,7 +23,6 @@ object GeoIPServer {
   private val port = sys.env.getOrElse("PORT", "8080").toInt
   private val bindHost = sys.env.getOrElse("BINDHOST", "0.0.0.0")
   private val serverPoolSize = sys.env.getOrElse("SERVERPOOL", "16").toInt
-  private val clientPoolSize = sys.env.getOrElse("CLIENTPOOL", "16").toInt
 
   private val L = Logger[this.type]
 
@@ -34,8 +33,7 @@ object GeoIPServer {
 
   def stream[F[_]: Async](coll: MongoCollection[F, Document],
                           sttpClient: SttpBackend[F, Fs2Streams[F] with capabilities.WebSockets])
-                         (implicit cmd: RedisCommands[F, String, String]):
-  Stream[F, Nothing] = {// Stream.resource(//Blocker[F]).flatMap { blocker =>
+                         (implicit cmd: RedisCommands[F, String, String]): Stream[F, Nothing] = {
 
     val covidAlg = GeoIP.impl[F](coll, sttpClient)
     // Combine Service Routes into an HttpApp.

@@ -12,7 +12,7 @@ import zio.json._
 import sttp.capabilities
 import sttp.capabilities.fs2.Fs2Streams
 import sttp.client3._
-import sttp.model.UriInterpolator
+import sttp.model.{Uri, UriInterpolator}
 import zio.json.ast.Json
 
 trait GeoIP[F[_]] extends Cache[F] {
@@ -35,7 +35,47 @@ object GeoIP extends UriInterpolator {
                       (implicit cmd: RedisCommands[F, String, String]): GeoIP[F] = new GeoIP[F]{
     import IP._
 
-    L.info(s"${IP}")
+    def getIpDoc(ip: Json.Obj): F[Document] = {
+      for {
+        doc <- Sync[F].delay(ip.fields.foldLeft(Document.empty) { (acc, elt) =>
+          val fixStr = elt._2.toString.replaceAll(""""""", "")
+          val fixKey = if (elt._1 == "ip") "_id" else elt._1
+          acc.append(fixKey, fixStr)
+        })
+      } yield doc
+    }
+
+    def getIpObj(ip: IP): F[Option[Json.Obj]] = {
+      for {
+        ipDataObj <- Sync[F].delay(Json.Obj.decoder.fromJsonAST(
+          ip.toJsonAST.getOrElse(Json.Null)
+        ).getOrElse(Json.Obj())
+        )
+      } yield {
+        if (ipDataObj.fields.size == 0)
+          Option.empty[Json.Obj]
+        else
+          Some(ipDataObj)
+      }
+    }
+
+    def getIpData(ipUri: Uri): F[Option[IP]] = {
+      for {
+        ipDataEither <- basicRequest.get(ipUri).send(S)
+          .map[Either[String, IP]] {
+            _.body.map {
+              _.fromJson[IP]
+            }.getOrElse(Right(IP()))
+          }.handleError { e =>
+          L.error(s""""request to {} failed" exception="{}"""", ipUri, e)
+          Left("Request Failed")
+        }
+        ipMaybe <- Sync[F].delay(ipDataEither match {
+          case Right(ip) => Some(ip)
+          case Left(_)   => Option.empty[IP]
+        })
+      } yield ipMaybe
+    }
 
     def getByIP(ip: String): F[IP] = {
         for {
@@ -45,41 +85,36 @@ object GeoIP extends UriInterpolator {
           ipRequestUri <- Sync[F].delay(uri"$geouri")
           resp <- if (!hasKey) {
             for {
-              cdata2 <- basicRequest.get(ipRequestUri).send(S)
-                .map[Either[String, IP]] {
-                  _.body.map {
-                    _.fromJson[IP]
-                  }.getOrElse(Right(IP()))
-                }
-              cdata <- Sync[F].delay(cdata2.getOrElse(IP())) /*C.expect[IP](stateUri) C.expect[IP](GET(stateUri)).adaptError { case t =>
-            L.error(s"decode error {$t.getMessage}")
-            DataError(t) }*/
-              cdataJson <- Sync[F].delay(cdata.toJson)
-              cdataJson2 <- Sync[F].delay(cdata.toJsonAST.map { js =>
-                Json.Obj.decoder.fromJsonAST(js).map { jsobj =>
-                  Right(jsobj)
-                }.getOrElse(Left("bad obj"))
-              }.getOrElse(Left("bad json")))
-              cdataDoc <- Sync[F].delay(cdataJson2.map { jsonObj =>
-                Right[String, Document](jsonObj.fields.foldLeft(Document.empty) { (acc, elt) =>
-                  val fixStr = elt._2.toString.replaceAll(""""""", "")
-                  val fixKey = if (elt._1 == "ip") "_id" else elt._1
-                  acc.append(fixKey, fixStr)
-                })
-              }.getOrElse(Left("bad obj")))
-              _ <- cdataDoc match {
-                case Right(doc) =>
-                  L.info(s"inserting ${doc.toJson}")
-                  coll.insertOne(doc).handleError { e =>
-                    L.error(s""""exception occurred inserting {}" exception="{}"""", doc, e)
+              ipMaybe <- getIpData(ipRequestUri)
+              ipObjMaybe <- ipMaybe match {
+                case Some(ip) => getIpObj(ip)
+                case _        => Sync[F].delay(Option.empty[Json.Obj])
+              }
+              ipDoc <- ipObjMaybe match {
+                case Some(ipObj) => getIpDoc(ipObj)
+                case _           => Sync[F].delay(Document.empty)
+              }
+              added <- if (ipDoc.isEmpty) {
+                Sync[F].pure(false)
+              } else {
+                L.info(s"inserting ${ipDoc.toJson}")
+                for {
+                  result <- coll.insertOne(ipDoc).handleError { e =>
+                    L.error(s""""exception occurred inserting {}" exception="{}"""", ipDoc, e)
                     InsertOneResult.unacknowledged()
                   }
-                case Left(str) => L.error(s""""error on $str" could not save""")
-                  Sync[F].unit
+                  bool <- Sync[F].delay(result.wasAcknowledged)
+                } yield bool
               }
-              cdataStr <- Sync[F].delay(cdataJson)
-              _ <- setRedisKey(key, cdataStr)
-            } yield cdata
+              ipData <- if (added) {
+                for {
+                  ip <- Sync[F].delay(ipMaybe.get)
+                  ipDataStr <- Sync[F].delay(ip.toJson)
+                  cdataStr <- Sync[F].delay(ipDataStr)
+                  _ <- setRedisKey(key, cdataStr)
+                } yield ip
+              } else Sync[F].pure(IP())
+            } yield ipData
           } else
             getIPFromRedis(key)
         } yield resp
