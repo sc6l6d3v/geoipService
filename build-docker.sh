@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-REDISKEY='f1tdfbtp00t' REDISHOST=192.168.4.47 \
+REDISKEY="${REDKEY}" REDISHOST=192.168.4.47 \
     MONGOURI="${MONGOSRC}" MONGORO=false \
     GEOIPKEY=${GEOKEY} \
     DBNAME=crm \
