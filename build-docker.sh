@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-REDISKEY='f1tdfbtp00t' REDISHOST=192.168.4.47 \
-    MONGOURI="mongodb://crmacct:(4mVs3r{}|@wengen.iscs-i.com:8771/crm" MONGORO=false \
-    GEOIPKEY=e4e5e2e7c82545e6829e8e580dc14ac3 \
+REDISKEY="${REDISKEY}" REDISHOST=192.168.4.47 \
+    MONGOURI="${MONGOSRC}" MONGORO=false \
+    GEOIPKEY=${GEOKEY} \
     DBNAME=crm \
     PORT=8080 \
     BINDHOST=0.0.0.0 \
