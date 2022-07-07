@@ -1,8 +1,5 @@
 #!/usr/bin/env bash
-REDISKEY="${REDKEY}" REDISHOST=192.168.4.47 \
-    MONGOURI="${MONGOSRC}" MONGORO=false \
-    GEOIPKEY=${GEOKEY} \
-    DBNAME=crm \
+    MONGORO=false \
     PORT=8080 \
     BINDHOST=0.0.0.0 \
     CLIENTPOOL=128 \
