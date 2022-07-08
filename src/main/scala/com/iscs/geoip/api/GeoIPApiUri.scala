@@ -1,10 +1,6 @@
 package com.iscs.geoip.api
 
-case class GeoIPApiUri(base: String, path: String, ip: String = "127.0.0.1") {
-  def withBase(newBase: String): GeoIPApiUri = copy(base = newBase)
-
-  def withPath(newPath: String): GeoIPApiUri = copy(path = newPath)
-}
+final case class GeoIPApiUri(base: String, path: String, ip: String = "127.0.0.1")
 
 object GeoIPApiUri {
   val base = "https://api.ipgeolocation.io"

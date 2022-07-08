@@ -17,7 +17,8 @@ trait Cache[F[_]] {
     }.getOrElse(IP()))
   } yield retrieved
 
-  def setRedisKey[F[_]: Sync](key: String, inpValue: String)(implicit cmd: RedisCommands[F, String, String]): F[Unit] = for {
+  def setRedisKey[F[_]: Sync](key: String, inpValue: String)(
+    implicit cmd: RedisCommands[F, String, String]): F[Unit] = for {
     asString <- Sync[F].delay(inpValue)
     _ <- Sync[F].delay(L.info("\"setting key\" key={} value={}", key, asString))
     _ <- cmd.set(key, asString)

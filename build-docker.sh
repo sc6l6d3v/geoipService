@@ -1,4 +1,7 @@
-#!/usr/bin/env bash
+#!/bin/bash
+# load env vars
+export  $(cat .env | grep -v ^\# | xargs)
+
     MONGORO=false \
     PORT=8080 \
     BINDHOST=0.0.0.0 \

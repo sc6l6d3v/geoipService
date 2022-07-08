@@ -26,7 +26,7 @@ object GeoIP extends UriInterpolator {
 
   final case class DataError(e: Throwable) extends RuntimeException
 
-  def fromState(state: String): IP = state.fromJson[IP] match {
+  def fromState(ip: String): IP = ip.fromJson[IP] match {
     case Right(ip)   => ip
     case Left(_) => IP()
   }
@@ -52,7 +52,7 @@ object GeoIP extends UriInterpolator {
         ).getOrElse(Json.Obj())
         )
       } yield {
-        if (ipDataObj.fields.size == 0)
+        if (ipDataObj.fields.isEmpty)
           Option.empty[Json.Obj]
         else
           Some(ipDataObj)

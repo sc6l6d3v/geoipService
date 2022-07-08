@@ -14,12 +14,11 @@ object Main extends IOApp {
   private val collName = sys.env.getOrElse("COLLNAME", "ipdb")
 
   def run(args: List[String]): IO[ExitCode] = for {
-    start <- IO.delay(System.currentTimeMillis)
     dbClient <- IO.delay(new DbClient[IO](dbName, List(collName), Mongo.fromUrl()))
     resources = for {
-      redis    <- new RedisConfig[IO]().resource2
-      mongoClient      <- dbClient.dbResource
-      sttpRes   <- AsyncHttpClientFs2Backend.resource[IO]()
+      redis       <- new RedisConfig[IO]().resource
+      mongoClient <- dbClient.dbResource
+      sttpRes     <- AsyncHttpClientFs2Backend.resource[IO]()
     } yield (redis, mongoClient, sttpRes)
 
     ec <- resources.use { case (cmd, mongoClient, sttpCli) =>
@@ -37,6 +36,5 @@ object Main extends IOApp {
           })
       } yield s
     }
-    end <- IO.delay(System.currentTimeMillis)
   } yield ec
 }

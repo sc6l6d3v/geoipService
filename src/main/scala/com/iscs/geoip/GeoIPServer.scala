@@ -35,13 +35,8 @@ object GeoIPServer {
                           sttpClient: SttpBackend[F, Fs2Streams[F] with capabilities.WebSockets])
                          (implicit cmd: RedisCommands[F, String, String]): Stream[F, Nothing] = {
 
-    val covidAlg = GeoIP.impl[F](coll, sttpClient)
-    // Combine Service Routes into an HttpApp.
-    // Can also be done via a Router if you
-    // want to extract a segments not checked
-    // in the underlying routes.
-    val httpApp = GeoIPRoutes.geoIPRoutes[F](covidAlg).orNotFound
-    // With Middlewares in place
+    val geoip = GeoIP.impl[F](coll, sttpClient)
+    val httpApp = GeoIPRoutes.geoIPRoutes[F](geoip).orNotFound
     val finalHttpApp = hpLogger.httpApp(logHeaders = true, logBody = true)(httpApp)
 
     val srvStream = for {
@@ -52,6 +47,5 @@ object GeoIPServer {
         .serve
     } yield exitCode
     srvStream.drain
-
   }
 }

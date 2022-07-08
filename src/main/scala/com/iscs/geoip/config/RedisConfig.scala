@@ -9,11 +9,11 @@ import dev.profunktor.redis4cats.effect.MkRedis
 
 class RedisConfig[F[_]: MkRedis : Sync]() {
   private val redisHost = sys.env.getOrElse("REDISHOST", "localhost")
-  private val pwd = sys.env.getOrElse("REDISKEY", "NOREDISKEY") //.replace("@", "%40")
-  private val JUri2 = s"redis://$pwd@$redisHost"
+  private val pwd = sys.env.getOrElse("REDISKEY", "NOREDISKEY")
+  private val uriString = s"redis://$pwd@$redisHost"
   private val stringCodec: RedisCodec[String, String] = RedisCodec.Utf8
-  val resource2 =   for {
-       uri <- Resource.eval(RedisURI.make[F](JUri2))
+  val resource =   for {
+       uri <- Resource.eval(RedisURI.make[F](uriString))
        cli <- RedisClient[F].fromUri(uri)
        rd <- Redis[F].fromClient(cli, stringCodec)
      } yield rd

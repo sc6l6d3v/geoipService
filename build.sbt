@@ -1,14 +1,5 @@
 import Dependencies._
 
-val LogbackVersion = "1.2.3"
-val catsRetryVersion = "1.1.0"
-val fs2Version = "2.2.2"
-val loggingVersion = "3.9.2"
-val redis4catsVersion = "0.10.0"
-val upickleVersion = "0.9.5"
-val fs2MongoVersion = "0.5.0"
-val mongoScalaVersion = "4.0.5"
-
 lazy val root = (project in file("."))
   .settings(
     organization := "com.iscs",
@@ -17,8 +8,6 @@ lazy val root = (project in file("."))
     scalaVersion := "2.13.6",
     libraryDependencies ++= Seq(
       http4s.blaze_server,
-      http4s.blaze_client,
-      http4s.circe,
       http4s.dsl,
       sttp.client3,
       zio.json,
