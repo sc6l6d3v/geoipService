@@ -9,18 +9,18 @@ import dev.profunktor.redis4cats.RedisCommands
 trait Cache[F[_]] {
   private val L = Logger[this.type]
 
-  def getIPFromRedis[F[_]: Sync](key: String)(implicit cmd: RedisCommands[F, String, String]): F[IP] = for {
+  def getIPFromRedis[S[_]: Sync](key: String)(implicit cmd: RedisCommands[S, String, String]): S[IP] = for {
     memValOpt <- cmd.get(key)
-    retrieved <- Sync[F].delay(memValOpt.map{ memVal =>
+    retrieved <- Sync[S].delay(memValOpt.map{ memVal =>
       L.info("\"retrieved key\" key={} value={}", key, memVal)
       fromState(memVal)
     }.getOrElse(IP()))
   } yield retrieved
 
-  def setRedisKey[F[_]: Sync](key: String, inpValue: String)(
-    implicit cmd: RedisCommands[F, String, String]): F[Unit] = for {
-    asString <- Sync[F].delay(inpValue)
-    _ <- Sync[F].delay(L.info("\"setting key\" key={} value={}", key, asString))
+  def setRedisKey[S[_]: Sync](key: String, inpValue: String)(
+    implicit cmd: RedisCommands[S, String, String]): S[Unit] = for {
+    asString <- Sync[S].delay(inpValue)
+    _ <- Sync[S].delay(L.info("\"setting key\" key={} value={}", key, asString))
     _ <- cmd.set(key, asString)
   } yield ()
 }

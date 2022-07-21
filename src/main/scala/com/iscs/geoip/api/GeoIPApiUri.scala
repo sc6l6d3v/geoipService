@@ -6,7 +6,7 @@ object GeoIPApiUri {
   val base = "https://api.ipgeolocation.io"
   val path = "/ipgeo"
   val keyParam = "apiKey"
-  val keyValue = sys.env.getOrElse("GEOIPKEY", "NOKEY")
+  val keyValue: String = sys.env.getOrElse("GEOIPKEY", "NOKEY")
   val fieldsParam = "fields"
   val fieldsValues = "geo,organization"
 

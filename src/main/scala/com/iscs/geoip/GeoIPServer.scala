@@ -35,11 +35,11 @@ object GeoIPServer {
                           sttpClient: SttpBackend[F, Fs2Streams[F] with capabilities.WebSockets])
                          (implicit cmd: RedisCommands[F, String, String]): Stream[F, Nothing] = {
 
-    val geoip = GeoIP.impl[F](coll, sttpClient)
-    val httpApp = GeoIPRoutes.geoIPRoutes[F](geoip).orNotFound
-    val finalHttpApp = hpLogger.httpApp(logHeaders = true, logBody = true)(httpApp)
-
     val srvStream = for {
+      _ <- Stream.eval(Sync[F].delay(L.info("adding geoip route")))
+      geoip <- Stream.eval(Sync[F].delay(GeoIP.impl[F](coll, sttpClient)))
+      httpApp <- Stream.eval(Sync[F].delay(GeoIPRoutes.geoIPRoutes[F](geoip).orNotFound))
+      finalHttpApp <- Stream.eval(Sync[F].delay(hpLogger.httpApp(logHeaders = true, logBody = true)(httpApp)))
       serverPool <- getPool(serverPoolSize)
       exitCode <- BlazeServerBuilder[F](serverPool)
         .bindHttp(port, bindHost)

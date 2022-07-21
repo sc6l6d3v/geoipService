@@ -27,8 +27,7 @@ object Main extends IOApp {
         db <- mongoClient.getDatabase(dbName)
         coll <- db.getCollection(collName)
         _ <- IO.delay(L.info("starting service"))
-        serverStream <- IO.delay(GeoIPServer.stream[IO](coll, sttpCli))
-        s <- serverStream
+        s <- GeoIPServer.stream[IO](coll, sttpCli)
           .compile.drain.as(ExitCode.Success)
           .handleErrorWith(ex => IO {
             L.error("\"exception during stream startup\" exception={} ex={}", ex.toString, ex)

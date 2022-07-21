@@ -1,5 +1,7 @@
 package com.iscs.geoip.domains
 
+import java.util.Date
+
 import cats.effect.Sync
 import cats.implicits._
 import com.iscs.geoip.api.GeoIPApiUri
@@ -8,11 +10,12 @@ import com.typesafe.scalalogging.Logger
 import dev.profunktor.redis4cats.RedisCommands
 import mongo4cats.bson.Document
 import mongo4cats.collection.MongoCollection
-import zio.json._
+import org.mongodb.scala.bson.BsonDateTime
 import sttp.capabilities
 import sttp.capabilities.fs2.Fs2Streams
 import sttp.client3._
 import sttp.model.{Uri, UriInterpolator}
+import zio.json._
 import zio.json.ast.Json
 
 trait GeoIP[F[_]] extends Cache[F] {
@@ -35,15 +38,30 @@ object GeoIP extends UriInterpolator {
                       (implicit cmd: RedisCommands[F, String, String]): GeoIP[F] = new GeoIP[F]{
     import IP._
 
-    def getIpDoc(ip: Json.Obj): F[Document] = {
+    private val fieldCreationDate = "creationDate"
+    private val fieldLastModified = "lastModified"
+    private val doubleFieldSize = 15
+
+    def getIpDoc(ip: Json.Obj): F[Document] =
       for {
         doc <- Sync[F].delay(ip.fields.foldLeft(Document.empty) { (acc, elt) =>
-          val fixStr = elt._2.toString.replaceAll(""""""", "")
+          val fieldVal = elt._2.toString
           val fixKey = if (elt._1 == "ip") "_id" else elt._1
-          acc.append(fixKey, fixStr)
+          val tuple = if (elt._1.endsWith("ude")) {
+            JsonDecoder.double.decodeJson(fieldVal.take(doubleFieldSize)).map { eitherDbl =>
+              L.info(s"attempting ${elt._1} for $fieldVal yielding $eitherDbl")
+              (fixKey, eitherDbl)
+            }.getOrElse((fixKey, 0.0d))
+          } else {
+            JsonDecoder.string.decodeJson(fieldVal).map { either =>
+              (fixKey, either)
+            }.getOrElse((fixKey,""))
+          }
+          acc.append(tuple._1, tuple._2)
         })
-      } yield doc
-    }
+        timeStamp <- Sync[F].delay(BsonDateTime(new Date().getTime))
+        withDate <- Sync[F].delay(doc.append(fieldCreationDate,timeStamp).append(fieldLastModified, timeStamp))
+      } yield withDate
 
     def getIpObj(ip: IP): F[Option[Json.Obj]] = {
       for {
@@ -61,20 +79,14 @@ object GeoIP extends UriInterpolator {
 
     def getIpData(ipUri: Uri): F[Option[IP]] = {
       for {
-        ipDataEither <- basicRequest.get(ipUri).send(S)
-          .map[Either[String, IP]] {
-            _.body.map {
-              _.fromJson[IP]
-            }.getOrElse(Right(IP()))
-          }.handleError { e =>
-          L.error(s""""request to {} failed" exception="{}"""", ipUri, e)
-          Left("Request Failed")
-        }
-        ipMaybe <- Sync[F].delay(ipDataEither match {
-          case Right(ip) => Some(ip)
-          case Left(_)   => Option.empty[IP]
-        })
-      } yield ipMaybe
+        responseEither <- basicRequest.get(ipUri).send(S)
+        maybeIP <- Sync[F].delay(responseEither.body.map { bodyStr =>
+          bodyStr.fromJson[IP].map{ ip =>
+            L.info(s"converted body: $ip")
+            Some(ip)
+          }.getOrElse(Option.empty[IP])
+        }.getOrElse(Option.empty[IP]))
+      } yield maybeIP
     }
 
     def getByIP(ip: String): F[IP] = {
@@ -86,32 +98,23 @@ object GeoIP extends UriInterpolator {
           resp <- if (!hasKey) {
             for {
               ipMaybe <- getIpData(ipRequestUri)
-              ipObjMaybe <- ipMaybe match {
-                case Some(ip) => getIpObj(ip)
-                case _        => Sync[F].delay(Option.empty[Json.Obj])
-              }
-              ipDoc <- ipObjMaybe match {
-                case Some(ipObj) => getIpDoc(ipObj)
-                case _           => Sync[F].delay(Document.empty)
-              }
+              ipObjMaybe <- ipMaybe.map(ip => getIpObj(ip)).getOrElse(Sync[F].delay(Option.empty[Json.Obj]))
+              ipDoc <- ipObjMaybe.map(json => getIpDoc(json)).getOrElse(Sync[F].delay(Document.empty))
               added <- if (ipDoc.isEmpty) {
                 Sync[F].pure(false)
               } else {
-                L.info(s"inserting ${ipDoc.toJson}")
                 for {
+                  _ <- Sync[F].delay(L.info(s"inserting $ipDoc"))
                   result <- coll.insertOne(ipDoc).handleError { e =>
                     L.error(s""""exception occurred inserting {}" exception="{}"""", ipDoc, e)
                     InsertOneResult.unacknowledged()
                   }
-                  bool <- Sync[F].delay(result.wasAcknowledged)
-                } yield bool
+                } yield result.wasAcknowledged
               }
               ipData <- if (added) {
                 for {
                   ip <- Sync[F].delay(ipMaybe.get)
-                  ipDataStr <- Sync[F].delay(ip.toJson)
-                  cdataStr <- Sync[F].delay(ipDataStr)
-                  _ <- setRedisKey(key, cdataStr)
+                  _ <- setRedisKey(key, ip.toJson)
                 } yield ip
               } else Sync[F].pure(IP())
             } yield ipData
