@@ -2,7 +2,7 @@ import sbt._
 
 object Dependencies {
   object Versions {
-    val Http4sVersion = "1.0.0-M21"
+    val Http4sVersion = "0.23.12"
     val Specs2Version = "4.9.3"
     val LogbackVersion = "1.2.3"
     val catsRetryVersion = "1.1.0"
@@ -17,8 +17,9 @@ object Dependencies {
   }
 
   object http4s {
-    val blaze_server = "org.http4s"       %% "http4s-blaze-server" % Versions.Http4sVersion
-    val dsl =    "org.http4s"             %% "http4s-dsl"          % Versions.Http4sVersion
+    val server       = "org.http4s"  %% "http4s-ember-server" % Versions.Http4sVersion
+    val blaze_server = "org.http4s"  %% "http4s-blaze-server" % Versions.Http4sVersion
+    val dsl          = "org.http4s"  %% "http4s-dsl"          % Versions.Http4sVersion
   }
 
   object sttp {
@@ -30,8 +31,8 @@ object Dependencies {
   }
 
   object redis4cats {
-    val core = "dev.profunktor" %% "redis4cats-effects" % Versions.redis4catsVersion
-    val stream = "dev.profunktor" %% "redis4cats-streams" % Versions.redis4catsVersion
+    val core     = "dev.profunktor" %% "redis4cats-effects"  % Versions.redis4catsVersion
+    val stream   = "dev.profunktor" %% "redis4cats-streams"  % Versions.redis4catsVersion
     val log4cats = "dev.profunktor" %% "redis4cats-log4cats" % Versions.redis4catsVersion
   }
 
@@ -40,7 +41,7 @@ object Dependencies {
   }
 
   object mongo4cats {
-    val core = "io.github.kirill5k" %% "mongo4cats-core" % Versions.mongo4catsVersion
+    val core  = "io.github.kirill5k" %% "mongo4cats-core" % Versions.mongo4catsVersion
     val circe = "io.github.kirill5k" %% "mongo4cats-circe" % Versions.mongo4catsVersion
   }
 
@@ -49,18 +50,12 @@ object Dependencies {
   }
 
   object logback {
-    val classic = "ch.qos.logback"   %  "logback-classic"     % Versions.LogbackVersion
-    val logging = "com.typesafe.scala-logging" %% "scala-logging" % Versions.loggingVersion
+    val classic = "ch.qos.logback"             %  "logback-classic" % Versions.LogbackVersion
+    val logging = "com.typesafe.scala-logging" %% "scala-logging"   % Versions.loggingVersion
   }
 
   object cats {
-    val retry = "com.github.cb372" %% "cats-retry"          % Versions.catsRetryVersion
+    val retry = "com.github.cb372" %% "cats-retry"      % Versions.catsRetryVersion
     val log4cats = "org.typelevel" %% s"log4cats-slf4j" % Versions.log4catsVersion
-  }
-
-  object fs2 {
-    val core = "co.fs2"        %% "fs2-core"            % Versions.fs2Version
-    val io =    "co.fs2"       %% "fs2-io"              % Versions.fs2Version
-    val streams = "co.fs2"     %% "fs2-reactive-streams" % Versions.fs2Version
   }
 }

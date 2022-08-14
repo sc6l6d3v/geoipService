@@ -1,23 +1,22 @@
 package com.iscs.geoip
 
-import java.util.concurrent.Executors
-
-import cats.effect.{Async, Sync}
+import cats.effect.{Async, Resource, Sync}
+import cats.implicits._
+import com.comcast.ip4s._
 import com.iscs.geoip.domains.GeoIP
 import com.iscs.geoip.routes.GeoIPRoutes
 import com.typesafe.scalalogging.Logger
 import dev.profunktor.redis4cats.RedisCommands
-import fs2.Stream
 import mongo4cats.bson.Document
 import mongo4cats.collection.MongoCollection
+import org.http4s.HttpApp
+import org.http4s.ember.server._
 import org.http4s.implicits._
-import org.http4s.server.blaze.BlazeServerBuilder
 import org.http4s.server.middleware.{Logger => hpLogger}
+import org.http4s.server.{Router, Server}
 import sttp.capabilities
 import sttp.capabilities.fs2.Fs2Streams
 import sttp.client3.SttpBackend
-
-import scala.concurrent.{ExecutionContext, ExecutionContextExecutorService}
 
 object GeoIPServer {
   private val port = sys.env.getOrElse("PORT", "8080").toInt
@@ -26,26 +25,27 @@ object GeoIPServer {
 
   private val L = Logger[this.type]
 
-  def getPool[F[_] : Sync](size: Int): Stream[F, ExecutionContextExecutorService] = for {
-    es <- Stream.eval(Sync[F].delay(Executors.newFixedThreadPool(size)))
-    ex <- Stream.eval(Sync[F].delay(ExecutionContext.fromExecutorService(es)))
-  } yield ex
+  def getServices[F[_]: Async](coll: MongoCollection[F, Document],
+                               sttpClient: SttpBackend[F, Fs2Streams[F] with capabilities.WebSockets])
+                              (implicit cmd: RedisCommands[F, String, String]): F[HttpApp[F]] = {
+    for {
+      geoip   <- Sync[F].delay(GeoIP.impl[F](coll, sttpClient))
+      httpApp <- Sync[F].delay(
+        Router("/" -> GeoIPRoutes.geoIPRoutes[F](geoip))
+          .orNotFound)
+      finalHttpApp <- Sync[F].delay(hpLogger.httpApp(logHeaders = true, logBody = true)(httpApp))
+    } yield finalHttpApp
+  }
 
-  def stream[F[_]: Async](coll: MongoCollection[F, Document],
-                          sttpClient: SttpBackend[F, Fs2Streams[F] with capabilities.WebSockets])
-                         (implicit cmd: RedisCommands[F, String, String]): Stream[F, Nothing] = {
-
-    val srvStream = for {
-      _ <- Stream.eval(Sync[F].delay(L.info("adding geoip route")))
-      geoip <- Stream.eval(Sync[F].delay(GeoIP.impl[F](coll, sttpClient)))
-      httpApp <- Stream.eval(Sync[F].delay(GeoIPRoutes.geoIPRoutes[F](geoip).orNotFound))
-      finalHttpApp <- Stream.eval(Sync[F].delay(hpLogger.httpApp(logHeaders = true, logBody = true)(httpApp)))
-      serverPool <- getPool(serverPoolSize)
-      exitCode <- BlazeServerBuilder[F](serverPool)
-        .bindHttp(port, bindHost)
+  def getResource[F[_]: Async](finalHttpApp: HttpApp[F]): Resource[F, Server] = {
+    for {
+      server <- EmberServerBuilder
+        .default[F]
+        .withHost(Ipv4Address.fromString(bindHost).getOrElse(ipv4"0.0.0.0"))
+        .withPort(Port.fromInt(port).getOrElse(port"8080"))
         .withHttpApp(finalHttpApp)
-        .serve
-    } yield exitCode
-    srvStream.drain
+        .withMaxConnections(serverPoolSize)
+        .build
+    } yield server
   }
 }

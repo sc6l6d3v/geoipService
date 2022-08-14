@@ -27,13 +27,14 @@ object Main extends IOApp {
         db <- mongoClient.getDatabase(dbName)
         coll <- db.getCollection(collName)
         _ <- IO.delay(L.info("starting service"))
-        s <- GeoIPServer.stream[IO](coll, sttpCli)
-          .compile.drain.as(ExitCode.Success)
+        services <- GeoIPServer.getServices(coll, sttpCli)
+        ec2 <- GeoIPServer.getResource(services).use { _ => IO.never }
+          .as(ExitCode.Success)
           .handleErrorWith(ex => IO {
             L.error("\"exception during stream startup\" exception={} ex={}", ex.toString, ex)
             ExitCode.Error
           })
-      } yield s
+      } yield ec2
     }
   } yield ec
 }

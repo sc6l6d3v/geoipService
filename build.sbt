@@ -9,6 +9,7 @@ lazy val root = (project in file("."))
     libraryDependencies ++= Seq(
       http4s.blaze_server,
       http4s.dsl,
+      http4s.server,
       sttp.client3,
       zio.json,
       redis4cats.core,
@@ -21,10 +22,7 @@ lazy val root = (project in file("."))
       logback.classic,
       logback.logging,
       cats.retry,
-      cats.log4cats,
-      fs2.core,
-      fs2.io,
-      fs2.streams
+      cats.log4cats
     ),
     addCompilerPlugin("org.typelevel" %% "kind-projector"     % "0.10.3"),
     addCompilerPlugin("com.olegpy"    %% "better-monadic-for" % "0.3.1"),
