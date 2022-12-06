@@ -7,6 +7,7 @@ import com.typesafe.scalalogging.Logger
 import zio.json._
 import org.http4s._
 import org.http4s.dsl.Http4sDsl
+import org.http4s.headers.`Content-Type`
 
 object GeoIPRoutes {
   private val L = Logger[this.type]
@@ -16,11 +17,11 @@ object GeoIPRoutes {
     import dsl._
     HttpRoutes.of[F] {
       case _ @ GET -> Root / "ip" / ip =>
-        for {
+        Ok(for {
           grid <- C.getByIP(ip.toLowerCase)
           _ <- Sync[F].delay(L.info(s""""ip request" $ip"""))
-          resp <- Ok(grid.toJson)
-        } yield resp
+          resp <- Sync[F].delay(grid.toJson)
+        } yield resp).map(_.withContentType(`Content-Type`(MediaType.application.`json`)))
     }
   }
 }
