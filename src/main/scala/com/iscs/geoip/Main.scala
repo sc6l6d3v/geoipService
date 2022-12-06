@@ -6,7 +6,7 @@ import com.iscs.geoip.util.{DbClient, Mongo}
 import com.typesafe.scalalogging.Logger
 import dev.profunktor.redis4cats.RedisCommands
 import dev.profunktor.redis4cats.effect.Log.Stdout._
-import sttp.client3.asynchttpclient.fs2.AsyncHttpClientFs2Backend
+import sttp.client3.httpclient.fs2.HttpClientFs2Backend
 
 object Main extends IOApp {
   private val L = Logger[this.type]
@@ -18,7 +18,7 @@ object Main extends IOApp {
     resources = for {
       redis       <- new RedisConfig[IO]().resource
       mongoClient <- dbClient.dbResource
-      sttpRes     <- AsyncHttpClientFs2Backend.resource[IO]()
+      sttpRes     <- HttpClientFs2Backend.resource[IO]()
     } yield (redis, mongoClient, sttpRes)
 
     ec <- resources.use { case (cmd, mongoClient, sttpCli) =>

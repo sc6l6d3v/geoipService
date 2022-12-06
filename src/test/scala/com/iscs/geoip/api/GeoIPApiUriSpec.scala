@@ -1,11 +1,9 @@
 package com.iscs.geoip.api
 
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
-
 import org.specs2.matcher.MatchResult
+import org.specs2.mutable.Specification
 
-class GeoIPApiUriSpec extends org.specs2.mutable.Specification {
+class GeoIPApiUriSpec extends Specification {
 
   private val base = "https://api.ipgeolocation.io"
   private val path = "/ipgeo"

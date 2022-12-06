@@ -11,8 +11,6 @@ import org.http4s.dsl.Http4sDsl
 object GeoIPRoutes {
   private val L = Logger[this.type]
 
-  implicit val llSEncoder: JsonEncoder[List[List[String]]] = DeriveJsonEncoder.gen[List[List[String]]]
-
   def geoIPRoutes[F[_]: Sync](C: GeoIP[F]): HttpRoutes[F] = {
     val dsl = new Http4sDsl[F]{}
     import dsl._

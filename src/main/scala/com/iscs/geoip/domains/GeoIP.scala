@@ -1,7 +1,6 @@
 package com.iscs.geoip.domains
 
 import java.util.Date
-
 import cats.effect.Sync
 import cats.implicits._
 import com.iscs.geoip.api.GeoIPApiUri
@@ -14,6 +13,7 @@ import org.mongodb.scala.bson.BsonDateTime
 import sttp.capabilities
 import sttp.capabilities.fs2.Fs2Streams
 import sttp.client3._
+import sttp.model.MediaType.ApplicationJson
 import sttp.model.{Uri, UriInterpolator}
 import zio.json._
 import zio.json.ast.Json
@@ -79,13 +79,15 @@ object GeoIP extends UriInterpolator {
 
     def getIpData(ipUri: Uri): F[Option[IP]] = {
       for {
-        responseEither <- basicRequest.get(ipUri).send(S)
-        maybeIP <- Sync[F].delay(responseEither.body.map { bodyStr =>
-          bodyStr.fromJson[IP].map{ ip =>
-            L.info(s"converted body: $ip")
-            Some(ip)
+        responseEither <- quickRequest.contentType(ApplicationJson).get(ipUri).send(S)
+        maybeIP <- Sync[F].delay {
+          val headers = responseEither.headers
+          L.info(s"got headers: ${headers.map(hdr => s"${hdr.name}:${hdr.value}").mkString("+")}")
+          responseEither.body.fromJson[IP].map { asIp =>
+            L.info(s"converted body: $asIp")
+              Some(asIp)
           }.getOrElse(Option.empty[IP])
-        }.getOrElse(Option.empty[IP]))
+        }
       } yield maybeIP
     }
 

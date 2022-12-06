@@ -3,17 +3,18 @@ import sbt._
 object Dependencies {
   object Versions {
     val Http4sVersion = "0.23.12"
-    val Specs2Version = "4.9.3"
+    val Specs2Version = "4.16.1"
     val LogbackVersion = "1.2.3"
     val catsRetryVersion = "1.1.0"
     val log4catsVersion = "2.3.1"
-    val fs2Version = "3.2.8"
+    val fs2Version = "3.3.0"
     val loggingVersion = "3.9.2"
     val redis4catsVersion = "1.2.0"
     val mongoScalaVersion = "4.2.3"
     val mongo4catsVersion = "0.4.7"
-    val zioJsonVersion = "0.1.5"
-    val sttpVersion = "3.5.2"
+    val zioJsonVersion = "0.3.0"
+    val sttpVersion = "3.8.3"
+    val WeaverTestVersion = "0.7.15"
   }
 
   object http4s {
@@ -41,8 +42,13 @@ object Dependencies {
   }
 
   object mongo4cats {
-    val core  = "io.github.kirill5k" %% "mongo4cats-core" % Versions.mongo4catsVersion
+    val core  = "io.github.kirill5k" %% "mongo4cats-core"  % Versions.mongo4catsVersion
     val circe = "io.github.kirill5k" %% "mongo4cats-circe" % Versions.mongo4catsVersion
+  }
+
+  object weaverTest {
+    val cats  = "com.disneystreaming" %% "weaver-cats"      % Versions.WeaverTestVersion % "test"
+    val specs = "com.disneystreaming" %% "weaver-specs2"    % Versions.WeaverTestVersion % "test"
   }
 
   object specs2 {
