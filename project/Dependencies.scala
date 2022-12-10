@@ -2,7 +2,7 @@ import sbt._
 
 object Dependencies {
   object Versions {
-    val Http4sVersion = "0.23.12"
+    val Http4sVersion = "0.23.16"
     val Specs2Version = "4.16.1"
     val LogbackVersion = "1.2.3"
     val catsRetryVersion = "1.1.0"
@@ -19,7 +19,6 @@ object Dependencies {
 
   object http4s {
     val server       = "org.http4s"  %% "http4s-ember-server" % Versions.Http4sVersion
-    val blaze_server = "org.http4s"  %% "http4s-blaze-server" % Versions.Http4sVersion
     val dsl          = "org.http4s"  %% "http4s-dsl"          % Versions.Http4sVersion
   }
 
