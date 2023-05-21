@@ -4,12 +4,11 @@
 # original file from
 # https://github.com/hseeberger/scala-sbt
 #
-
 # Pull base image
-FROM openjdk:8
+FROM bellsoft/liberica-openjdk-alpine:17.0.5
 
 # Env variables
-ENV SCALA_VERSION 2.13.6
+ENV SCALA_VERSION 2.13.8
 ENV SBT_VERSION   1.0.2
 ENV APP_NAME      geoipService
 ENV APP_VERSION   0.1-SNAPSHOT
@@ -36,37 +35,13 @@ ENV SERVERPOOL=$serverpool
 ARG MONGOURI=$mongouri
 ARG MONGORO=$mongoro
 
-
 # ENV variables for App
-
-
-# Install Scala
-## Piping curl directly in tar
 RUN \
-  curl -fsL https://downloads.typesafe.com/scala/$SCALA_VERSION/scala-$SCALA_VERSION.tgz | tar xfz - -C /root/ && \
-  echo >> /root/.bashrc && \
-  echo "export PATH=~/scala-$SCALA_VERSION/bin:$PATH" >> /root/.bashrc
-
-# Install sbt
-#RUN \
-#  curl -L -o sbt-$SBT_VERSION.deb https://dl.bintray.com/sbt/debian/sbt-$SBT_VERSION.deb && \
-#  dpkg -i sbt-$SBT_VERSION.deb && \
-#  rm sbt-$SBT_VERSION.deb && \
-#  apt-get update && \
-#  apt-get install sbt && \
-#  sbt sbtVersion
+   apk add --no-cache curl bash busybox-extras
 
 # Define working directory
 WORKDIR /root
 ENV PROJECT_HOME /usr/src
-
-COPY [".env", "/tmp/build/"]
-COPY ["build.sbt", "/tmp/build/"]
-COPY ["project/plugins.sbt", "project/build.properties", "/tmp/build/project/"]
-#RUN cd /tmp/build && \
-# sbt update && \
-# sbt compile && \
-# sbt assembly
 
 RUN mkdir -p $PROJECT_HOME/data
 
