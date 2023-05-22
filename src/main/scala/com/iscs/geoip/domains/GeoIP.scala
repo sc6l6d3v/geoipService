@@ -29,9 +29,9 @@ object GeoIP extends UriInterpolator {
 
   final case class DataError(e: Throwable) extends RuntimeException
 
-  def fromState(ip: String): IP = ip.fromJson[IP] match {
-    case Right(ip)   => ip
-    case Left(_) => IP()
+  def fromJsonIP(ipJson: String): IP = ipJson.fromJson[IP] match {
+    case Right(ip) => ip
+    case Left(_)   => IP()
   }
 
   def impl[F[_]: Sync](coll: MongoCollection[F, Document], S: SttpBackend[F, Fs2Streams[F] with capabilities.WebSockets])

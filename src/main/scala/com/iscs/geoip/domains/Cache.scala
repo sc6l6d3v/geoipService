@@ -2,7 +2,7 @@ package com.iscs.geoip.domains
 
 import cats.effect.Sync
 import cats.implicits._
-import com.iscs.geoip.domains.GeoIP.fromState
+import com.iscs.geoip.domains.GeoIP.fromJsonIP
 import com.typesafe.scalalogging.Logger
 import dev.profunktor.redis4cats.RedisCommands
 
@@ -13,7 +13,7 @@ trait Cache[F[_]] {
     memValOpt <- cmd.get(key)
     retrieved <- Sync[S].delay(memValOpt.map{ memVal =>
       L.info("\"retrieved key\" key={} value={}", key, memVal)
-      fromState(memVal)
+      fromJsonIP(memVal)
     }.getOrElse(IP()))
   } yield retrieved
 
