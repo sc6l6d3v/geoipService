@@ -1,21 +1,20 @@
 package com.iscs.geoip.domains
 
-import java.util.Date
+import java.time.Instant
 import cats.effect.Sync
-import cats.implicits._
+import cats.syntax.all.*
 import com.iscs.geoip.api.GeoIPApiUri
 import com.mongodb.client.result.InsertOneResult
 import com.typesafe.scalalogging.Logger
 import dev.profunktor.redis4cats.RedisCommands
 import mongo4cats.bson.Document
 import mongo4cats.collection.MongoCollection
-import org.mongodb.scala.bson.BsonDateTime
 import sttp.capabilities
 import sttp.capabilities.fs2.Fs2Streams
-import sttp.client3._
+import sttp.client3.*
 import sttp.model.MediaType.ApplicationJson
 import sttp.model.{Uri, UriInterpolator}
-import zio.json._
+import zio.json.*
 import zio.json.ast.Json
 
 trait GeoIP[F[_]] extends Cache[F] {
@@ -36,7 +35,7 @@ object GeoIP extends UriInterpolator {
 
   def impl[F[_]: Sync](coll: MongoCollection[F, Document], S: SttpBackend[F, Fs2Streams[F] with capabilities.WebSockets])
                       (implicit cmd: RedisCommands[F, String, String]): GeoIP[F] = new GeoIP[F]{
-    import IP._
+    import IP.*
 
     private val fieldCreationDate = "creationDate"
     private val fieldLastModified = "lastModified"
@@ -47,20 +46,19 @@ object GeoIP extends UriInterpolator {
         doc <- Sync[F].delay(ip.fields.foldLeft(Document.empty) { (acc, elt) =>
           val fieldVal = elt._2.toString
           val fixKey = if (elt._1 == "ip") "_id" else elt._1
-          val tuple = if (elt._1.endsWith("ude")) {
-            JsonDecoder.double.decodeJson(fieldVal.take(doubleFieldSize)).map { eitherDbl =>
+          if (elt._1.endsWith("ude")) {
+            val dblVal = JsonDecoder.double.decodeJson(fieldVal.take(doubleFieldSize)).map { eitherDbl =>
               L.info(s"attempting ${elt._1} for $fieldVal yielding $eitherDbl")
-              (fixKey, eitherDbl)
-            }.getOrElse((fixKey, 0.0d))
+              eitherDbl
+            }.getOrElse(0.0d)
+            acc.add(fixKey -> dblVal)
           } else {
-            JsonDecoder.string.decodeJson(fieldVal).map { either =>
-              (fixKey, either)
-            }.getOrElse((fixKey,""))
+            val strVal = JsonDecoder.string.decodeJson(fieldVal).getOrElse("")
+            acc.add(fixKey -> strVal)
           }
-          acc.append(tuple._1, tuple._2)
         })
-        timeStamp <- Sync[F].delay(BsonDateTime(new Date().getTime))
-        withDate <- Sync[F].delay(doc.append(fieldCreationDate,timeStamp).append(fieldLastModified, timeStamp))
+        timeStamp <- Sync[F].delay(Instant.now())
+        withDate <- Sync[F].delay(doc.add(fieldCreationDate -> timeStamp).add(fieldLastModified -> timeStamp))
       } yield withDate
 
     def getIpObj(ip: IP): F[Option[Json.Obj]] = {

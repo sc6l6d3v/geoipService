@@ -1,7 +1,7 @@
 package com.iscs.geoip.domains
 
 import cats.effect.Sync
-import cats.implicits._
+import cats.syntax.all.*
 import com.iscs.geoip.domains.GeoIP.fromJsonIP
 import com.typesafe.scalalogging.Logger
 import dev.profunktor.redis4cats.RedisCommands

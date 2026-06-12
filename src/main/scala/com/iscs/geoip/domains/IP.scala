@@ -1,6 +1,6 @@
 package com.iscs.geoip.domains
 
-import zio.json._
+import zio.json.*
 import scala.util.Try
 
 final case class IP(ip: String = "", country_code2: String = "", country_code3: String = "", country_name: String = "",

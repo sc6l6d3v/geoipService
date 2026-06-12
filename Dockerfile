@@ -5,10 +5,10 @@
 # https://github.com/hseeberger/scala-sbt
 #
 # Pull base image
-FROM bellsoft/liberica-openjdk-alpine:17.0.5
+FROM bellsoft/liberica-openjdk-alpine:21
 
 # Env variables
-ENV SCALA_VERSION 2.13.8
+ENV SCALA_VERSION 3.3.8
 ENV SBT_VERSION   1.0.2
 ENV APP_NAME      geoipService
 ENV APP_VERSION   0.1-SNAPSHOT
@@ -52,7 +52,7 @@ EXPOSE 8080
 EXPOSE 5005
 # Expose this port if you want to enable remote debugging: 5005
 
-COPY target/scala-2.13/${APP_NAME}-assembly-$APP_VERSION.jar $PROJECT_HOME/data/$APP_NAME.jar
+COPY target/scala-3.3.8/${APP_NAME}-assembly-$APP_VERSION.jar $PROJECT_HOME/data/$APP_NAME.jar
 
 # This will run at start, it points to the .sh file in the bin directory to start the play app
 ENTRYPOINT java -jar $PROJECT_HOME/data/$APP_NAME.jar -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005

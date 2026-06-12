@@ -2,19 +2,16 @@ import sbt._
 
 object Dependencies {
   object Versions {
-    val Http4sVersion = "0.23.16"
-    val Specs2Version = "4.16.1"
-    val LogbackVersion = "1.2.3"
-    val catsRetryVersion = "1.1.0"
-    val log4catsVersion = "2.3.1"
-    val fs2Version = "3.3.0"
-    val loggingVersion = "3.9.2"
-    val redis4catsVersion = "1.2.0"
-    val mongoScalaVersion = "4.2.3"
-    val mongo4catsVersion = "0.4.7"
-    val zioJsonVersion = "0.3.0"
-    val sttpVersion = "3.8.3"
-    val WeaverTestVersion = "0.7.15"
+    val Http4sVersion = "0.23.32"
+    val Specs2Version = "5.9.0"
+    val LogbackVersion = "1.5.34"
+    val log4catsVersion = "2.8.0"
+    val loggingVersion = "3.9.5"
+    val redis4catsVersion = "1.7.2"
+    val mongo4catsVersion = "0.7.13"
+    val zioJsonVersion = "0.7.45"
+    val sttpVersion = "3.9.8"
+    val WeaverTestVersion = "0.12.0"
   }
 
   object http4s {
@@ -23,7 +20,7 @@ object Dependencies {
   }
 
   object sttp {
-    val client3 = "com.softwaremill.sttp.client3" %% "async-http-client-backend-fs2" % Versions.sttpVersion
+    val client3 = "com.softwaremill.sttp.client3" %% "fs2" % Versions.sttpVersion
   }
 
   object zio {
@@ -36,22 +33,17 @@ object Dependencies {
     val log4cats = "dev.profunktor" %% "redis4cats-log4cats" % Versions.redis4catsVersion
   }
 
-   object mongodb {
-    val driver = "org.mongodb.scala" %% "mongo-scala-driver" % Versions.mongoScalaVersion
-  }
-
   object mongo4cats {
     val core  = "io.github.kirill5k" %% "mongo4cats-core"  % Versions.mongo4catsVersion
     val circe = "io.github.kirill5k" %% "mongo4cats-circe" % Versions.mongo4catsVersion
   }
 
   object weaverTest {
-    val cats  = "com.disneystreaming" %% "weaver-cats"      % Versions.WeaverTestVersion % "test"
-    val specs = "com.disneystreaming" %% "weaver-specs2"    % Versions.WeaverTestVersion % "test"
+    val cats  = "org.typelevel" %% "weaver-cats" % Versions.WeaverTestVersion % "test"
   }
 
   object specs2 {
-    val test = "org.specs2"       %% "specs2-core"         % Versions.Specs2Version % "test"
+    val test = "org.specs2" %% "specs2-core" % Versions.Specs2Version % "test"
   }
 
   object logback {
@@ -60,7 +52,6 @@ object Dependencies {
   }
 
   object cats {
-    val retry = "com.github.cb372" %% "cats-retry"      % Versions.catsRetryVersion
-    val log4cats = "org.typelevel" %% s"log4cats-slf4j" % Versions.log4catsVersion
+    val log4cats = "org.typelevel" %% "log4cats-slf4j" % Versions.log4catsVersion
   }
 }

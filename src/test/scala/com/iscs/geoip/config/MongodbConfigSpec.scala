@@ -2,33 +2,31 @@ package com.iscs.geoip.config
 
 import com.mongodb.ReadPreference
 import org.specs2.mutable.Specification
-import weaver.SimpleIOSuite
-import weaver.specs2compat.IOMatchers
 
 class MongodbConfigSpec extends Specification {
   private val mdbConfig = MongodbConfig("mongodb://localhost:27017/crm")
 
   "MongodbConfig" should {
     "take a URL string parameter" in {
-      mdbConfig.productElementName(0) mustEqual "url"
+      mdbConfig.productElementName(0) must beEqualTo("url")
     }
     "have default false isReadOnly param" in {
-      mdbConfig.productElement(1) mustEqual false
+      mdbConfig.productElement(1) must beEqualTo(false)
     }
     "provide a connection from Url" in {
-      mdbConfig.connection.isSrvProtocol mustEqual false
+      mdbConfig.connection.isSrvProtocol must beFalse
     }
     "may have an empty credentials" in {
-      mdbConfig.credentials mustEqual null
+      mdbConfig.credentials must beNull
     }
     "may have SSL disabled" in {
-      mdbConfig.useSSL mustEqual false
+      mdbConfig.useSSL must beFalse
     }
     "may not be a replicaSet" in {
-      mdbConfig.isReplicaSet mustEqual false
+      mdbConfig.isReplicaSet must beFalse
     }
     "may have a builder" in {
-      mdbConfig.settings.getReadPreference mustEqual ReadPreference.primaryPreferred()
+      mdbConfig.settings.getReadPreference must beEqualTo(ReadPreference.primaryPreferred())
     }
   }
 }

@@ -1,8 +1,8 @@
 package com.iscs.geoip
 
 import cats.effect.{Async, Resource, Sync}
-import cats.implicits._
-import com.comcast.ip4s._
+import cats.syntax.all.*
+import com.comcast.ip4s.*
 import com.iscs.geoip.domains.GeoIP
 import com.iscs.geoip.routes.GeoIPRoutes
 import com.typesafe.scalalogging.Logger
@@ -10,12 +10,13 @@ import dev.profunktor.redis4cats.RedisCommands
 import mongo4cats.bson.Document
 import mongo4cats.collection.MongoCollection
 import org.http4s.HttpApp
-import org.http4s.ember.server._
-import org.http4s.implicits._
+import org.http4s.ember.server.*
+import org.http4s.implicits.*
 import org.http4s.server.middleware.{Logger => hpLogger}
 import org.http4s.server.{Router, Server}
 import sttp.capabilities
 import sttp.capabilities.fs2.Fs2Streams
+import fs2.io.net.Network
 import sttp.client3.SttpBackend
 
 object GeoIPServer {
@@ -38,6 +39,7 @@ object GeoIPServer {
   }
 
   def getResource[F[_]: Async](finalHttpApp: HttpApp[F]): Resource[F, Server] = {
+    given Network[F] = Network.forAsync[F]
     for {
       server <- EmberServerBuilder
         .default[F]

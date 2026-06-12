@@ -1,7 +1,7 @@
 package com.iscs.geoip.util
 
 import cats.effect.{Async, Resource, Sync}
-import cats.syntax.all._
+import cats.syntax.all.*
 import com.iscs.geoip.config.MongodbConfig
 import com.typesafe.scalalogging.Logger
 import mongo4cats.bson.Document

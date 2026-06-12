@@ -5,7 +5,7 @@ import com.iscs.geoip.config.RedisConfig
 import com.iscs.geoip.util.{DbClient, Mongo}
 import com.typesafe.scalalogging.Logger
 import dev.profunktor.redis4cats.RedisCommands
-import dev.profunktor.redis4cats.effect.Log.Stdout._
+import dev.profunktor.redis4cats.effect.Log.Stdout.*
 import sttp.client3.httpclient.fs2.HttpClientFs2Backend
 
 object Main extends IOApp {
