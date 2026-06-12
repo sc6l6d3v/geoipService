@@ -20,8 +20,9 @@ fi
 : "${HUBUSER:?HUBUSER must be set (e.g. export HUBUSER=yourdockerhubuser)}"
 
 IMAGE="${HUBUSER}/geoip:rest-${ENV_UPPER}"
+NETWORK="rs-net-${ENV_UPPER,,}"
 
-docker run --net rs-net \
+docker run --net "${NETWORK}" \
   --env MONGOURI --env MONGORO --env REDISKEY --env REDISHOST \
   --env GEOIPKEY --env DBNAME --env PORT --env BINDHOST \
   --env CLIENTPOOL --env SERVERPOOL --env REDIS_TTL_MINUTES \
