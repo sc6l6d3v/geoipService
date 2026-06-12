@@ -2,13 +2,15 @@
 set -euo pipefail
 
 usage() {
-  echo "Usage: $0 DEV|PROD" >&2
+  echo "Usage: $0 DEV|PROD [HOST_PORT]" >&2
   exit 1
 }
 
 ENV_IN="${1:-}"; [[ -z "${ENV_IN}" ]] && usage
 ENV_UPPER="$(echo "${ENV_IN}" | tr '[:lower:]' '[:upper:]')"
 case "${ENV_UPPER}" in DEV|PROD) ;; *) echo "ENV must be DEV or PROD"; exit 2;; esac
+
+HOST_PORT="${2:-8083}"
 
 # Load variables from .env if present
 if [[ -f .env ]]; then
@@ -29,4 +31,4 @@ docker run --net "${NETWORK}" \
   --add-host=wengen.iscs-i.com:192.168.15.66 \
   --restart on-failure \
   --name geoip-svc \
-  -d -p 8083:8080 -p 5050:5050 "${IMAGE}"
+  -d -p "${HOST_PORT}:8080" -p 5050:5050 "${IMAGE}"
