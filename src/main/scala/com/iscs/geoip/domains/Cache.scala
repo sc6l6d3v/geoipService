@@ -1,5 +1,6 @@
 package com.iscs.geoip.domains
 
+import scala.concurrent.duration.*
 import cats.effect.Sync
 import cats.syntax.all.*
 import com.iscs.geoip.domains.GeoIP.fromJsonIP
@@ -8,6 +9,8 @@ import dev.profunktor.redis4cats.RedisCommands
 
 trait Cache[F[_]] {
   private val L = Logger[this.type]
+  private val cacheTtl: FiniteDuration =
+    sys.env.getOrElse("REDIS_TTL_MINUTES", "15").toLong.minutes
 
   def getIPFromRedis[S[_]: Sync](key: String)(implicit cmd: RedisCommands[S, String, String]): S[IP] = for {
     memValOpt <- cmd.get(key)
@@ -20,7 +23,7 @@ trait Cache[F[_]] {
   def setRedisKey[S[_]: Sync](key: String, inpValue: String)(
     implicit cmd: RedisCommands[S, String, String]): S[Unit] = for {
     asString <- Sync[S].delay(inpValue)
-    _ <- Sync[S].delay(L.info("\"setting key\" key={} value={}", key, asString))
-    _ <- cmd.set(key, asString)
+    _ <- Sync[S].delay(L.info("\"setting key\" key={} ttl={} value={}", key, cacheTtl, asString))
+    _ <- cmd.setEx(key, asString, cacheTtl)
   } yield ()
 }
